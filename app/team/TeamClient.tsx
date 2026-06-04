@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 type Props = {
   playerFiles: string[];
@@ -31,9 +32,9 @@ export default function TeamClient({ playerFiles, teamPhotoName }: Props) {
               onClick={() => setSelected(file)}
               className="bg-[#07372d] rounded-xl p-4 flex flex-col items-center text-center shadow-lg focus:outline-none"
             >
-                  <div className="w-28 h-28 sm:w-32 md:w-36 mb-3 rounded-full overflow-hidden border-2 border-[#fbbf24]/30">
-                    <img src={src} alt={displayName(file)} className="w-full h-full object-cover" />
-                  </div>
+              <div className="w-28 h-28 sm:w-32 md:w-36 mb-3 rounded-full overflow-hidden border-2 border-[#fbbf24]/30">
+                <Image src={src} alt={displayName(file)} className="w-full h-full object-cover" width={100} height={100} unoptimized />
+              </div>
               <div className="text-sm font-semibold text-emerald-100">{displayName(file)}</div>
             </button>
           );
@@ -44,7 +45,7 @@ export default function TeamClient({ playerFiles, teamPhotoName }: Props) {
         <section className="mt-12 bg-[#021d17]/40 p-6 rounded-2xl border border-[#fbbf24]/10">
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="w-40 h-40 sm:w-48 sm:h-48 md:w-56 md:h-56 rounded-lg overflow-hidden flex-shrink-0 border-2 border-[#fbbf24]/30">
-              <img src={encodeURI(`/images/joueurs vrai/${teamPhotoName}`)} alt="Photo de la team" className="w-full h-full object-cover" />
+              <Image src={encodeURI(`/images/joueurs vrai/${teamPhotoName}`)} alt="Photo de la team" className="w-full h-full object-cover" width={200} height={200} unoptimized />
             </div>
             <div className="prose prose-invert max-w-none text-sm leading-relaxed">
               <p className="text-lg font-semibold text-[#fbbf24] mb-2">Durant ce mois sacré, des joueurs… mais surtout des amis</p>
@@ -73,7 +74,7 @@ export default function TeamClient({ playerFiles, teamPhotoName }: Props) {
             <button onClick={() => setSelected(null)} className="absolute top-3 right-3 text-2xl">✕</button>
             <div className="flex flex-col items-center gap-4">
               <div className="w-48 h-48 sm:w-56 sm:h-56 md:w-72 md:h-72 rounded-lg overflow-hidden border-2 border-[#fbbf24]/30">
-                <img src={encodeURI(`/images/joueurs vrai/${selected}`)} alt={displayName(selected)} className="w-full h-full object-cover" />
+                <Image src={encodeURI(`/images/joueurs vrai/${selected}`)} alt={displayName(selected)} className="w-full h-full object-cover" width={200} height={200} unoptimized />
               </div>
               <div className="text-xl font-bold text-emerald-100">{displayName(selected)}</div>
             </div>
