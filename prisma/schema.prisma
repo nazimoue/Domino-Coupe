@@ -22,13 +22,14 @@ model Score {
 }
 
 model Player {
-  id        Int      @id @default(autoincrement())
-  prenom    String
-  nom       String
-  niveau    Niveau  @default(MEDIOCRE)
-  photo     Bytes?
-  createdAt DateTime @default(now())
-  scores    Score[]
+  id             Int      @id @default(autoincrement())
+  prenom         String
+  nom            String
+  niveau         Niveau  @default(MEDIOCRE)
+  matches_played Int      @default(0)
+  photo          Bytes?
+  createdAt      DateTime @default(now())
+  scores         Score[]
 }
 
 

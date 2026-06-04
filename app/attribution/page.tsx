@@ -14,8 +14,8 @@ const TOURNAMENT_DAYS = Array.from({ length: 30 }, (_, i) => {
 });
 
 export default function Attribution() {
-    const [players, setPlayers] = useState<{ id: string; prenom?: string }[]>([]);
-    const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+    const [players, setPlayers] = useState<Array<{ id: number; prenom?: string; matches_played?: number }>>([]);
+    const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
     const [selectedDay, setSelectedDay] = useState(1);
     const [customPoints, setCustomPoints] = useState<string>('');
     const [lastAction, setLastAction] = useState<string | null>(null);
@@ -27,12 +27,31 @@ export default function Attribution() {
     const [accumulatedPoints, setAccumulatedPoints] = useState(0);
     const [accumulationList, setAccumulationList] = useState<Array<{ type: string, points: number }>>([]);
 
+    const selectedPlayerObj = players.find((p) => p.id === selectedPlayer) ?? null;
+    const selectedPlayerMatches = selectedPlayerObj?.matches_played ?? 0;
+    const hasReachedMaxMatches = selectedPlayerObj ? selectedPlayerMatches >= 180 : false;
+
     // Charger les joueurs depuis Supabase au montage
     useEffect(() => {
         const fetchPlayers = async () => {
-            // On récupère le prénom pour n'afficher que le prénom côté UI
-            const { data, error } = await supabase.from('players').select('id, prenom');
-            if (!error && data) setPlayers(data);
+            // On récupère le prénom et le compteur de matchs si la colonne existe.
+            const { data, error } = await supabase.from('players').select('id, prenom, matches_played');
+            if (error && String(error.message).toLowerCase().includes('matches_played')) {
+                const { data: fallbackData, error: fallbackError } = await supabase.from('players').select('id, prenom');
+                if (!fallbackError && fallbackData) {
+                    setPlayers(fallbackData.map((player: any) => ({
+                        ...player,
+                        id: Number(player.id),
+                        matches_played: 0,
+                    })));
+                }
+            } else if (!error && data) {
+                setPlayers(data.map((player: any) => ({
+                    ...player,
+                    id: Number(player.id),
+                    matches_played: player.matches_played ? Number(player.matches_played) : 0,
+                })));
+            }
         };
         fetchPlayers();
     }, []);
@@ -69,6 +88,12 @@ export default function Attribution() {
     // Confirmer l'attribution
     const handleConfirmAttribution = async () => {
         if (!selectedPlayer || !pendingAttribution) return;
+        if (hasReachedMaxMatches) {
+            setLastAction('❌ Ce joueur a déjà joué ses 180 matchs.');
+            setTimeout(() => setLastAction(null), 3000);
+            return;
+        }
+
         setIsConfirming(true);
         const { type, points } = pendingAttribution;
         const playerName = players.find(p => p.id === selectedPlayer)?.prenom;
@@ -95,6 +120,13 @@ export default function Attribution() {
             if (result.success) {
                 setLastAction(`✅ ${points > 0 ? '+' : ''}${points} pts attribués à ${playerName}`);
                 setCustomPoints('');
+                setPlayers(prevPlayers => prevPlayers.map(player => {
+                    if (player.id !== selectedPlayer) return player;
+                    return {
+                        ...player,
+                        matches_played: (player.matches_played ?? 0) + 1,
+                    };
+                }));
             } else {
                 setLastAction(`❌ ${result.error}`);
             }
