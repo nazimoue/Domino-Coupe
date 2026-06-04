@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import Image from 'next/image';
+/* eslint-disable react/no-unescaped-entities */
 
 export default function ProposPage() {
 	return (
@@ -13,30 +15,26 @@ export default function ProposPage() {
 				</h1>
 
 				<div className="mb-6">
-					<img
+					{/* Image replaced with Next.js Image component */}
+					<Image
 						src="/images/propos.jpeg"
 						alt="Riyad Fekar"
 						className="mx-auto rounded-2xl shadow-lg w-full max-w-xl h-auto"
+						width={800}
+						height={600}
+						unoptimized
 					/>
-				</div>
 
-				<div className="bg-emerald-900/30 backdrop-blur border border-[#fbbf24]/30 rounded-2xl p-6 text-emerald-100 text-lg">
-					<p className="leading-relaxed text-center">
-						L'application a été conçu par Dr Fekar Riyadh enseignant a l'université 
-L'application a été codée uniquement par amour du jeu .
-J'espère que l'application vous plaira et que le meilleur gagne.
-					</p>
+					{/* Bouton retour */}
+					<div className="relative z-40 w-full flex flex-col items-center justify-end flex-shrink-0 py-3 sm:py-4 md:py-5 px-3 sm:px-4 pointer-events-auto">
+						<Link
+							href="/home"
+							className="px-8 py-3 font-bold text-base rounded-lg shadow-lg transition-all duration-300 tracking-wider bg-linear-to-r from-[#fbbf24] to-[#fcd34d] text-[#064e3b] hover:shadow-[0_0_30px_rgba(251,191,36,0.4)]"
+						>
+							← Retour à l'accueil
+						</Link>
+					</div>
 				</div>
-			</div>
-
-			{/* Bouton retour */}
-			<div className="relative z-40 w-full flex flex-col items-center justify-end flex-shrink-0 py-3 sm:py-4 md:py-5 px-3 sm:px-4 pointer-events-auto">
-				<Link
-					href="/home"
-					className="px-8 py-3 font-bold text-base rounded-lg shadow-lg transition-all duration-300 tracking-wider bg-linear-to-r from-[#fbbf24] to-[#fcd34d] text-[#064e3b] hover:shadow-[0_0_30px_rgba(251,191,36,0.4)]"
-				>
-					← Retour à l'accueil
-				</Link>
 			</div>
 		</main>
 	);

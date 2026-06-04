@@ -4,6 +4,15 @@ import { NextRequest, NextResponse } from 'next/server';
 // Endpoint server-side pour migrer les photos stockées en data URLs vers Supabase Storage.
 // Sécurisé par une clef simple à fournir dans le body: { secret: process.env.MIGRATE_PHOTOS_SECRET }
 
+function getMessage(e: unknown) {
+  if (e instanceof Error) return e.message;
+  try {
+    return String(e);
+  } catch {
+    return 'Unknown error';
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -28,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     for (const p of players || []) {
       try {
-        const photo = p.photo as any;
+        const photo = p.photo as unknown;
         if (!photo || typeof photo !== 'string') {
           continue; // rien à migrer
         }
@@ -90,14 +99,14 @@ export async function POST(request: NextRequest) {
         }
 
         migrated.push({ id: p.id, url: publicUrl });
-      } catch (err: any) {
-        migrated.push({ id: p.id, error: err?.message || String(err) });
+      } catch (err: unknown) {
+        migrated.push({ id: p.id, error: getMessage(err) });
       }
     }
 
     return NextResponse.json({ success: true, migrated });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur migration:', error);
-    return NextResponse.json({ error: error?.message || 'Erreur inconnue' }, { status: 500 });
+    return NextResponse.json({ error: getMessage(error) || 'Erreur inconnue' }, { status: 500 });
   }
 }

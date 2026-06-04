@@ -1,6 +1,12 @@
+/* eslint-disable react/no-unescaped-entities */
+'use client';
 import Link from 'next/link';
+import { useState, useEffect } from 'react';
 
 export default function Rules() {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const rules = [
     "كي ماتڤولش حجرة",
     "كي تلعب حجرة ماتلتعبش ( خص الفريق المنافس يڤولك واسم هي)",
@@ -24,11 +30,11 @@ export default function Rules() {
 
   return (
     <main className="relative min-h-screen w-full bg-[#041336] overflow-hidden flex flex-col items-center font-sans selection:bg-sky-500 selection:text-slate-900">
-      
+
       {/* BACKGROUND EFFECTS */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '30px 30px' }}></div>
+        <div className="absolute inset-0 opacity-20" style={mounted ? { backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '30px 30px' } : undefined}></div>
       </div>
 
       {/* HEADER SECTION */}
@@ -65,7 +71,7 @@ export default function Rules() {
                 هذه القوانين لن تتغير الا باتفاق الجميع
               </p>
             </div>
-            
+
             <p className="text-emerald-400/60 text-xs font-bold tracking-widest uppercase py-4">
               <a href="https://share.google/AAmoAijaTJuQGf8Kt" target="_blank" rel="noopener noreferrer" className="underline">
                 Café MONTECARLO • Tlemcen
@@ -73,7 +79,7 @@ export default function Rules() {
             </p>
 
             <div className="text-2xl font-serif text-[#fbbf24]/40 select-none opacity-50">
-                ن م
+              ن م
             </div>
           </div>
         </div>

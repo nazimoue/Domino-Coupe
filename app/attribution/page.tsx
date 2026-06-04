@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities */
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -20,6 +21,8 @@ export default function Attribution() {
     const [lastAction, setLastAction] = useState<string | null>(null);
     const [pendingAttribution, setPendingAttribution] = useState<{ type: string, points: number } | null>(null);
     const [isConfirming, setIsConfirming] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
     const [accumulatedPoints, setAccumulatedPoints] = useState(0);
     const [accumulationList, setAccumulationList] = useState<Array<{ type: string, points: number }>>([]);
@@ -115,7 +118,7 @@ export default function Attribution() {
             {/* FOND (Identique) */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
-                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
+                <div className="absolute inset-0 opacity-20" style={mounted ? { backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' } : undefined}></div>
             </div>
 
             {/* CONTENU */}

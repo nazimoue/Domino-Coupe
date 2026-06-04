@@ -1,7 +1,9 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
@@ -10,6 +12,8 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -36,19 +40,19 @@ export default function Login() {
 
   return (
     <main className="relative min-h-screen w-full bg-[#041336] overflow-hidden flex flex-col items-center justify-center font-sans selection:bg-sky-500 selection:text-slate-900">
-      
+
       {/* =========================================
           FOND ET AMBIANCE (Glows & Particules)
          ========================================= */}
       <div className="absolute inset-0 z-0">
         {/* Dégradé profond inspiré de l'image */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
-        
+
         {/* Particules / Étoiles (CSS pur) */}
-        <div className="absolute inset-0 opacity-30" 
-             style={{ backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '50px 50px' }}>
+        <div className="absolute inset-0 opacity-30"
+          style={mounted ? { backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '50px 50px' } : undefined}>
         </div>
-        
+
         {/* Halo lumineux central */}
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-125 h-100 bg-yellow-500/20 rounded-full blur-[120px]"></div>
       </div>
@@ -58,19 +62,19 @@ export default function Login() {
          ========================================= */}
       {/* Coin Haut Gauche */}
       <div className="absolute top-0 left-0 w-32 h-32 md:w-48 md:h-48 pointer-events-none z-10 opacity-80">
-         <svg viewBox="0 0 100 100" className="w-full h-full fill-transparent stroke-[#fbbf24] stroke-2">
-            <path d="M0,0 L0,40 Q0,100 60,100 L100,100" strokeDasharray="4 2" />
-            <path d="M10,10 L10,50 Q10,90 50,90 L90,90" className="opacity-50" />
-            <circle cx="20" cy="20" r="4" fill="#fbbf24" className="animate-pulse" />
-         </svg>
+        <svg viewBox="0 0 100 100" className="w-full h-full fill-transparent stroke-[#fbbf24] stroke-2">
+          <path d="M0,0 L0,40 Q0,100 60,100 L100,100" strokeDasharray="4 2" />
+          <path d="M10,10 L10,50 Q10,90 50,90 L90,90" className="opacity-50" />
+          <circle cx="20" cy="20" r="4" fill="#fbbf24" className="animate-pulse" />
+        </svg>
       </div>
       {/* Coin Haut Droit (Miroir) */}
       <div className="absolute top-0 right-0 w-32 h-32 md:w-48 md:h-48 pointer-events-none z-10 opacity-80 rotate-90">
-         <svg viewBox="0 0 100 100" className="w-full h-full fill-transparent stroke-[#fbbf24] stroke-2">
-            <path d="M0,0 L0,40 Q0,100 60,100 L100,100" strokeDasharray="4 2" />
-            <path d="M10,10 L10,50 Q10,90 50,90 L90,90" className="opacity-50" />
-            <circle cx="20" cy="20" r="4" fill="#fbbf24" className="animate-pulse" />
-         </svg>
+        <svg viewBox="0 0 100 100" className="w-full h-full fill-transparent stroke-[#fbbf24] stroke-2">
+          <path d="M0,0 L0,40 Q0,100 60,100 L100,100" strokeDasharray="4 2" />
+          <path d="M10,10 L10,50 Q10,90 50,90 L90,90" className="opacity-50" />
+          <circle cx="20" cy="20" r="4" fill="#fbbf24" className="animate-pulse" />
+        </svg>
       </div>
 
       {/* Lanternes suspendues */}
@@ -83,18 +87,18 @@ export default function Login() {
           CONTENU PRINCIPAL - FORMULAIRE LOGIN
          ========================================= */}
       <div className="relative z-30 flex flex-col items-center w-full px-4 max-w-md">
-        
+
         {/* Logo Texte "Domino" Or */}
         <div className="text-center relative mb-12 flex flex-col items-center">
-            <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-linear-to-b from-[#fde68a] via-[#fbbf24] to-[#b45309] drop-shadow-sm font-serif">
+          <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-linear-to-b from-[#fde68a] via-[#fbbf24] to-[#b45309] drop-shadow-sm font-serif">
             Domino
-            </h1>
-            <div className="text-xl font-bold text-[#fbbf24] tracking-[0.3em] -mt-1.25">2026</div>
+          </h1>
+          <div className="text-xl font-bold text-[#fbbf24] tracking-[0.3em] -mt-1.25">2026</div>
         </div>
 
         {/* Formulaire de connexion */}
         <div className="w-full bg-[#064e3b]/40 backdrop-blur-md border border-[#fbbf24]/30 rounded-2xl shadow-2xl shadow-yellow-500/20 p-8">
-          
+
           <h2 className="text-2xl font-bold text-[#fbbf24] text-center mb-8 tracking-wide">
             Admin Login
           </h2>
@@ -165,7 +169,7 @@ export default function Login() {
 
         {/* Retour à l'accueil */}
         <div className="mt-8">
-          <Link 
+          <Link
             href="/home"
             className="text-[#fbbf24] hover:text-[#fcd34d] transition-colors text-sm font-semibold tracking-wide hover:underline"
           >
@@ -183,20 +187,20 @@ export default function Login() {
       </div>
 
     </main>
-    );
-  }
+  );
+}
 
-  // 1. Composant Lanterne
-  function Lanterne({ height, delay }: { height: string, delay: string }) {
-    return (
-      <div className="flex flex-col items-center" style={{ animation: `bounce 3s infinite ease-in-out ${delay}` }}>
-        <div className={`w-0.5 bg-linear-to-b from-[#fbbf24]/0 via-[#fbbf24] to-[#b45309] ${height}`}></div>
-        <div className="w-10 h-14 bg-linear-to-br from-[#fbbf24] to-[#b45309] rounded-lg border-2 border-[#fde68a] shadow-[0_0_20px_rgba(251,191,36,0.6)] flex items-center justify-center relative">
-          <div className="w-6 h-8 bg-[#fef3c7]/30 border border-[#fbbf24] rounded flex items-center justify-center">
-            <div className="w-2 h-4 bg-yellow-100 rounded-full blur-[2px] animate-pulse"></div>
-          </div>
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#b45309] rotate-45"></div>
+// 1. Composant Lanterne
+function Lanterne({ height, delay }: { height: string, delay: string }) {
+  return (
+    <div className="flex flex-col items-center" style={{ animation: `bounce 3s infinite ease-in-out ${delay}` }}>
+      <div className={`w-0.5 bg-linear-to-b from-[#fbbf24]/0 via-[#fbbf24] to-[#b45309] ${height}`}></div>
+      <div className="w-10 h-14 bg-linear-to-br from-[#fbbf24] to-[#b45309] rounded-lg border-2 border-[#fde68a] shadow-[0_0_20px_rgba(251,191,36,0.6)] flex items-center justify-center relative">
+        <div className="w-6 h-8 bg-[#fef3c7]/30 border border-[#fbbf24] rounded flex items-center justify-center">
+          <div className="w-2 h-4 bg-yellow-100 rounded-full blur-[2px] animate-pulse"></div>
         </div>
+        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#b45309] rotate-45"></div>
       </div>
-    );
-  }
+    </div>
+  );
+}

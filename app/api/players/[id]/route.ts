@@ -1,3 +1,4 @@
+import { getPlayerById, updatePlayerPhoto } from '@/lib/db';
 import { supabase } from '@/lib/supabaseClient';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -12,16 +13,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { photo } = body;
 
     // Récupérer le joueur existant
-    const { data: existingPlayer, error: fetchError } = await supabase
-      .from('players')
-      .select('photo')
-      .eq('id', id)
-      .single();
+    const existingPlayer = await getPlayerById(id);
 
-    if (fetchError) {
-      console.error('Erreur fetch joueur:', fetchError);
-      return NextResponse.json({ error: fetchError.message }, { status: 500 });
-    }
 
     let newPhotoValue: string | null = null;
 
@@ -69,16 +62,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Mettre à jour la DB
-    const { error: updateError } = await supabase.from('players').update({ photo: newPhotoValue }).eq('id', id);
-    if (updateError) {
-      console.error('Erreur update joueur:', updateError);
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
-    }
+    await updatePlayerPhoto(id, newPhotoValue);
 
     return NextResponse.json({ success: true, photo: newPhotoValue });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erreur PUT player photo:', error);
-    return NextResponse.json({ error: error?.message || 'Erreur inconnue' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Erreur inconnue';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -88,10 +78,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const resolved = await params;
     const id = Number(resolved.id);
     if (!id) return NextResponse.json({ error: 'ID invalide' }, { status: 400 });
-    const { data, error } = await supabase.from('players').select('*').eq('id', id).single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ success: true, data });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message || 'Erreur' }, { status: 500 });
+    try {
+      const data = await getPlayerById(id);
+      return NextResponse.json({ success: true, data });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Erreur';
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Erreur';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

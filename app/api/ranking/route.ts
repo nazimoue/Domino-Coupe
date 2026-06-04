@@ -5,8 +5,8 @@ export async function GET() {
 	try {
 		// Return a safe default (empty ranking) so the dev build/type validator is happy.
 		return NextResponse.json({ success: true, data: [] });
-	} catch (err: any) {
-		return NextResponse.json({ error: err?.message || 'Erreur' }, { status: 500 });
+	} catch (err: unknown) {
+		return NextResponse.json({ error: err instanceof Error ? err.message : 'Erreur' }, { status: 500 });
 	}
 }
 

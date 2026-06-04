@@ -30,6 +30,7 @@ type PlayerInfo = {
   capotLosses?: number;
 };
 import Link from 'next/link';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabaseClient';
 import type { User } from '@supabase/supabase-js';
 
@@ -69,6 +70,8 @@ export default function Classement() {
   const [countdown, setCountdown] = useState<string>('');
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null);
   const [rankingType, setRankingType] = useState<'normal' | 'capot'>('normal');
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   // Charger les joueurs et scores au montage
   useEffect(() => {
@@ -325,11 +328,11 @@ export default function Classement() {
 
   if (isLoading) {
     return (
-      <main className="min-h-screen w-full bg-[#041336] text-[#f8fafc] font-sans flex flex-col items-center justify-center selection:bg-sky-500 selection:text-slate-900">
+      <main suppressHydrationWarning className="min-h-screen w-full bg-[#041336] text-[#f8fafc] font-sans flex flex-col items-center justify-center selection:bg-sky-500 selection:text-slate-900">
         {/* FOND */}
         <div className="fixed inset-0 z-0 pointer-events-none">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
-          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
+          <div className="absolute inset-0 opacity-20" style={mounted ? { backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' } : undefined}></div>
         </div>
 
         {/* Animation: dominos qui tombent */}
@@ -403,7 +406,7 @@ export default function Classement() {
       {/* FOND */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
+        <div className="absolute inset-0 opacity-20" style={mounted ? { backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' } : undefined}></div>
       </div>
 
       {/* CONTENU */}
@@ -491,7 +494,7 @@ export default function Classement() {
             <div onClick={() => top3[1] && setSelectedPlayer(top3[1])} className="cursor-pointer flex flex-col items-center w-1/3">
               <div className="relative w-16 h-16 rounded-full border-2 border-gray-400 shadow-lg bg-[#064e3b] flex items-center justify-center mb-1 overflow-hidden">
                 {top3[1] && getPlayerPhoto(top3[1].id) ? (
-                  <img src={getPlayerPhoto(top3[1].id) as string} alt={top3[1].name} className="w-16 h-16 object-cover rounded-full" />
+                  <Image src={getPlayerPhoto(top3[1].id) as string} alt={top3[1].name} className="w-16 h-16 object-cover rounded-full" width={64} height={64} unoptimized />
                 ) : (
                   <span className="text-xl">🥈</span>
                 )}
@@ -512,7 +515,7 @@ export default function Classement() {
             <div onClick={() => top3[0] && setSelectedPlayer(currentList[0])} className="cursor-pointer flex flex-col items-center w-1/3 -mt-4">
               <div className="relative w-24 h-24 rounded-full border-4 border-[#fbbf24] shadow-[0_0_20px_rgba(251,191,36,0.5)] bg-[#064e3b] flex items-center justify-center mb-1 z-10 overflow-hidden">
                 {top3[0] && getPlayerPhoto(top3[0].id) ? (
-                  <img src={getPlayerPhoto(top3[0].id) as string} alt={top3[0].name} className="w-24 h-24 object-cover rounded-full" />
+                  <Image src={getPlayerPhoto(top3[0].id) as string} alt={top3[0].name} className="w-24 h-24 object-cover rounded-full" width={96} height={96} unoptimized />
                 ) : (
                   <span className="text-3xl font-bold text-[#fbbf24]">{top3[0]?.name?.charAt(0) ?? ''}</span>
                 )}
@@ -533,7 +536,7 @@ export default function Classement() {
             <div onClick={() => top3[2] && setSelectedPlayer(currentList[2])} className="cursor-pointer flex flex-col items-center w-1/3">
               <div className="relative w-16 h-16 rounded-full border-2 border-[#b45309] shadow-lg bg-[#064e3b] flex items-center justify-center mb-1 overflow-hidden">
                 {top3[2] && getPlayerPhoto(top3[2].id) ? (
-                  <img src={getPlayerPhoto(top3[2].id) as string} alt={top3[2].name} className="w-16 h-16 object-cover rounded-full" />
+                  <Image src={getPlayerPhoto(top3[2].id) as string} alt={top3[2].name} className="w-16 h-16 object-cover rounded-full" width={64} height={64} unoptimized />
                 ) : (
                   <span className="text-xl">🥉</span>
                 )}
@@ -560,7 +563,7 @@ export default function Classement() {
               <div className="flex items-center justify-center mt-0 mb-3">
                 <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#064e3b] to-[#072f26] flex items-center justify-center shadow-inner overflow-hidden">
                   {getPlayerPhoto(selectedPlayer.id) ? (
-                    <img src={getPlayerPhoto(selectedPlayer.id) as string} alt={selectedPlayer.name} className="w-20 h-20 object-cover rounded-full" />
+                    <Image src={getPlayerPhoto(selectedPlayer.id) as string} alt={selectedPlayer.name} className="w-20 h-20 object-cover rounded-full" width={80} height={80} unoptimized />
                   ) : (
                     <div className="w-20 h-20 flex items-center justify-center text-lg font-bold text-emerald-200">{selectedPlayer.name?.charAt(0)}</div>
                   )}
@@ -607,7 +610,7 @@ export default function Classement() {
                   <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center">
                     {getPlayerPhoto(player.id) ? (
                       // Use a regular <img> so we don't need to add domains to next.config
-                      <img src={getPlayerPhoto(player.id) as string} alt={player.name} className="w-12 h-12 object-cover rounded-full" />
+                      <Image src={getPlayerPhoto(player.id) as string} alt={player.name} className="w-12 h-12 object-cover rounded-full" width={48} height={48} unoptimized />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-[#002a20] border border-emerald-500/20 flex items-center justify-center text-base font-bold text-emerald-300">{player.name.charAt(0)}</div>
                     )}

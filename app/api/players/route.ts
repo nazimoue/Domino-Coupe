@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Préparer les données à insérer
-    const playerData: any = {
+    const playerData: Record<string, unknown> = {
       name,
       prenom,
       photo: null,

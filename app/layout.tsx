@@ -31,10 +31,10 @@ export default function RootLayout({
         <meta name="theme-color" content="#041336" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <link rel="manifest" href="/manifest.json" />
-  {/* Prefer PNG icons for maximum mobile compatibility; please place your app PNG(s) in /public */}
-  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
-  <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
+        <link rel="manifest" href="/manifest.json" />
+        {/* Prefer PNG icons for maximum mobile compatibility; please place your app PNG(s) in /public */}
+        <link rel="icon" type="image/png" sizes="512x512" href="/icon-512x512.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.png" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans selection:bg-sky-500 selection:text-slate-900`}

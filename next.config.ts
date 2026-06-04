@@ -1,7 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Resolve the workspace root for Turbopack (fixes missing next package)
+  turbopack: {
+    // Absolute path to the project root
+    root: __dirname, // absolute path
+  },
 };
 
 export default nextConfig;

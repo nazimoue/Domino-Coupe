@@ -1,4 +1,6 @@
 'use client';
+/* eslint-disable react/no-unescaped-entities */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
@@ -7,13 +9,17 @@ import AdhanClock from '@/app/components/AdhanClock';
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const checkUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      setIsConnected(!!user);
+      if (!cancelled) setIsConnected(!!user);
     };
     checkUser();
+    return () => { cancelled = true; };
   }, []);
 
   const handleLogout = async () => {
@@ -23,20 +29,20 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen w-full bg-[#041336] overflow-hidden flex flex-col items-center justify-start sm:justify-between font-sans selection:bg-sky-500 selection:text-slate-900">
-      
+    <main suppressHydrationWarning className="relative min-h-screen w-full bg-[#041336] overflow-hidden flex flex-col items-center justify-start sm:justify-between font-sans selection:bg-sky-500 selection:text-slate-900">
+
       {/* 1. BACKGROUND AMBIANCE */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
-        <div className="absolute inset-0 opacity-20" 
-             style={{ backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
+        <div className="absolute inset-0 opacity-20"
+          style={mounted ? { backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '40px 40px' } : undefined}>
         </div>
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[400px] bg-sky-500/10 rounded-full blur-[120px]"></div>
       </div>
 
       {/* 2. CONTENU */}
       <div className="relative z-30 flex flex-col items-center w-full px-4">
-        
+
         {/* EN-TÊTE */}
         <div className="flex flex-col items-center pt-10 mb-4 text-center">
           <h2 className="text-2xl sm:text-4xl text-sky-300 font-serif tracking-tighter drop-shadow-lg uppercase">
@@ -54,7 +60,7 @@ export default function Home() {
         <div className="relative w-72 h-80 sm:w-96 sm:h-[400px] flex items-center justify-center my-4">
           {/* Éclat lumineux arrière dynamique */}
           <div className="absolute w-40 h-40 bg-sky-400/15 blur-[80px] rounded-full animate-pulse"></div>
-          
+
           <svg viewBox="0 0 200 240" className="w-full h-full drop-shadow-[0_30px_50px_rgba(0,0,0,0.7)]">
             <defs>
               {/* Or Blanc / Chrome Liquide */}
@@ -82,7 +88,7 @@ export default function Home() {
 
               {/* Ombre portée pour détacher les couches */}
               <filter id="layerShadow" x="-10%" y="-10%" width="120%" height="120%">
-                <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#020617" floodOpacity="0.6"/>
+                <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#020617" floodOpacity="0.6" />
               </filter>
             </defs>
 
@@ -114,7 +120,7 @@ export default function Home() {
             <g transform="translate(72, 45)" filter="url(#layerShadow)">
               {/* Face avant du Domino Or Blanc Premium */}
               <rect x="0" y="0" width="56" height="90" rx="5" fill="url(#chromeGrad)" stroke="#ffffff" strokeWidth="1" />
-              
+
               {/* Biseau lumineux (Effet 3D sur le bord gauche/haut) */}
               <path d="M2 2 L54 2 L54 5 L2 5 Z" fill="#ffffff" opacity="0.4" />
               <path d="M2 2 L2 88 L5 88 L5 2 Z" fill="#ffffff" opacity="0.4" />
@@ -135,7 +141,7 @@ export default function Home() {
                 <circle cx="15" cy="65.5" r="4.5" /> <circle cx="41" cy="65.5" r="4.5" />
                 <circle cx="15" cy="77" r="4.5" /> <circle cx="41" cy="77" r="4.5" />
               </g>
-              
+
               {/* Points lumineux au centre de chaque point pour l'effet relief creux */}
               <g fill="#38bdf8" opacity="0.7">
                 <circle cx="16" cy="14" r="1" /> <circle cx="42" cy="14" r="1" />
@@ -168,7 +174,7 @@ export default function Home() {
           <NavButton href="/explication" label="❓ Explication" />
           <NavButton href="/propos" label="ℹ️ À propos" />
           <NavButton href="/reglesarab" label="📋 Règles" />
-          
+
           {isConnected ? (
             <button
               onClick={handleLogout}
@@ -182,14 +188,14 @@ export default function Home() {
 
           {isConnected && (
             <div className="w-full flex justify-center gap-3 mt-4 pt-4 border-t border-sky-400/20">
-               <NavButton href="/creation" label="✨ Création" admin />
-               <NavButton href="/attribution" label="🎁 Attribution" admin />
+              <NavButton href="/creation" label="✨ Création" admin />
+              <NavButton href="/attribution" label="🎁 Attribution" admin />
             </div>
           )}
         </div>
         <div className="mt-6 max-w-4xl mx-auto px-4">
           <div className="rounded-3xl border border-red-500/60 bg-red-950/95 text-center py-4 px-5 shadow-[0_0_30px_rgba(220,38,38,0.35)] animate-pulse text-red-100 font-extrabold uppercase tracking-wider text-sm md:text-base">
-            ⚠️ Les 3 meilleurs joueurs de ces qualifications auront le droit de choisir leurs pertenaires pour la Coupe du Domino Ramadan 2027.
+            ⚠️ Les 3 meilleurs joueurs de ces qualifications auront le droit de choisir leurs partenaires pour la Coupe de Domino Ramadan 2027.
           </div>
         </div>
       </div>
@@ -199,12 +205,12 @@ export default function Home() {
 
 function NavButton({ href, label, admin }: { href: string, label: string, admin?: boolean }) {
   return (
-    <Link 
+    <Link
       href={href}
       className={`
         px-6 py-2.5 font-bold text-sm rounded-xl shadow-lg transition-all border hover:scale-105 flex items-center gap-2
-        ${admin 
-          ? 'bg-sky-600/20 border-sky-400/50 text-sky-100' 
+        ${admin
+          ? 'bg-sky-600/20 border-sky-400/50 text-sky-100'
           : 'bg-white/10 border-white/10 text-sky-100 hover:bg-white/20'
         }
       `}
