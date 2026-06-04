@@ -34,11 +34,11 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabaseClient';
 import type { User } from '@supabase/supabase-js';
 
-// Liste des jours du tournoi (Jeudis et vendredis du 11 juin au 10 juillet)
+// Liste des jours du tournoi (Jeudis et vendredis du 11 juin au 31 décembre)
 const TOURNAMENT_DAYS = (() => {
   const days = [] as Array<{ id: number; label: string; date: string }>;
   const start = new Date(2026, 5, 11); // 5 = juin
-  const end = new Date(2026, 6, 10); // 6 = juillet
+  const end = new Date(2026, 11, 31); // 11 = décembre
   let current = new Date(start);
   let index = 1;
 
@@ -130,13 +130,13 @@ export default function Classement() {
   };
 
   // Calculer le classement selon le filtre et le jour choisi
-  // Helper: déterminer le niveau à partir des points (dynamique, recalculé selon la période sélectionnée)
+  // Helper: déterminer le niveau à partir des points avec le nouveau barème
   const mapPointsToLevel = (points: number) => {
-    if (points >= 120) return 'Très fort';
-    if (points >= 70) return 'Fort';
-    if (points >= 25) return 'Moyen';
-    if (points >= 5) return 'Faible';
-    // anything below 5 (including negatives) is 'Médiocre'
+    if (points >= 600) return 'Très fort';
+    if (points >= 300) return 'Fort';
+    if (points >= 100) return 'Moyen';
+    if (points >= -99) return 'Faible';
+    // anything <= -100 is 'Médiocre'
     return 'Médiocre';
   };
 
