@@ -13,8 +13,8 @@ const TOURNAMENT_DAYS = Array.from({ length: 30 }, (_, i) => {
 });
 
 export default function Attribution() {
-    const [players, setPlayers] = useState<{ id: string; prenom?: string }[]>([]);
-    const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+    const [players, setPlayers] = useState<Array<{ id: number; prenom?: string; matches_played?: number }>>([]);
+    const [selectedPlayer, setSelectedPlayer] = useState<number | null>(null);
     const [selectedDay, setSelectedDay] = useState(1);
     const [customPoints, setCustomPoints] = useState<string>('');
     const [lastAction, setLastAction] = useState<string | null>(null);
@@ -25,12 +25,31 @@ export default function Attribution() {
     const [accumulationActionType, setAccumulationActionType] = useState<string | null>(null);
     const [accumulationList, setAccumulationList] = useState<Array<{type: string, points: number}>>([]);
 
+    const selectedPlayerObj = players.find((p) => p.id === selectedPlayer) ?? null;
+    const selectedPlayerMatches = selectedPlayerObj?.matches_played ?? 0;
+    const hasReachedMaxMatches = selectedPlayerObj ? selectedPlayerMatches >= 180 : false;
+
     // Charger les joueurs depuis Supabase au montage
     useEffect(() => {
         const fetchPlayers = async () => {
-            // On récupère le prénom pour n'afficher que le prénom côté UI
-            const { data, error } = await supabase.from('players').select('id, prenom');
-            if (!error && data) setPlayers(data);
+            // On récupère le prénom et le compteur de matchs si la colonne existe.
+            const { data, error } = await supabase.from('players').select('id, prenom, matches_played');
+            if (error && String(error.message).toLowerCase().includes('matches_played')) {
+                const { data: fallbackData, error: fallbackError } = await supabase.from('players').select('id, prenom');
+                if (!fallbackError && fallbackData) {
+                    setPlayers(fallbackData.map((player: any) => ({
+                        ...player,
+                        id: Number(player.id),
+                        matches_played: 0,
+                    })));
+                }
+            } else if (!error && data) {
+                setPlayers(data.map((player: any) => ({
+                    ...player,
+                    id: Number(player.id),
+                    matches_played: player.matches_played ? Number(player.matches_played) : 0,
+                })));
+            }
         };
         fetchPlayers();
     }, []);
@@ -38,7 +57,12 @@ export default function Attribution() {
     // Préparer l'attribution, à confirmer ensuite - AVEC CUMUL POUR TOUTES LES ACTIONS
     const handlePrepareAttribution = (type: string, points: number) => {
         if (!selectedPlayer) return;
-        
+        if (hasReachedMaxMatches) {
+            setLastAction('❌ Ce joueur a déjà joué ses 180 matchs.');
+            setTimeout(() => setLastAction(null), 3000);
+            return;
+        }
+
         // Ajouter les points au total cumulé
         const newTotal = accumulatedPoints + points;
         setAccumulatedPoints(newTotal);
@@ -67,9 +91,15 @@ export default function Attribution() {
     // Confirmer l'attribution
     const handleConfirmAttribution = async () => {
         if (!selectedPlayer || !pendingAttribution) return;
+        if (hasReachedMaxMatches) {
+            setLastAction('❌ Ce joueur a déjà joué ses 180 matchs.');
+            setTimeout(() => setLastAction(null), 3000);
+            return;
+        }
+
         setIsConfirming(true);
         const { type, points } = pendingAttribution;
-    const playerName = players.find(p => p.id === selectedPlayer)?.prenom;
+        const playerName = players.find(p => p.id === selectedPlayer)?.prenom;
         
         try {
                 // If there is an accumulation list, send the individual actions so the server
@@ -93,6 +123,13 @@ export default function Attribution() {
             if (result.success) {
                 setLastAction(`✅ ${points > 0 ? '+' : ''}${points} pts attribués à ${playerName}`);
                 setCustomPoints('');
+                setPlayers(prevPlayers => prevPlayers.map(player => {
+                    if (player.id !== selectedPlayer) return player;
+                    return {
+                        ...player,
+                        matches_played: (player.matches_played ?? 0) + 1,
+                    };
+                }));
             } else {
                 setLastAction(`❌ ${result.error}`);
             }
@@ -166,7 +203,7 @@ export default function Attribution() {
                 <label className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-2 block pl-1">Sélectionner un Joueur</label>
                 <select 
                     className="w-full bg-[#064e3b]/50 border border-[#fbbf24]/30 rounded-xl p-4 text-[#fff7ed] outline-none focus:border-[#fbbf24] focus:ring-1 focus:ring-[#fbbf24] transition-all appearance-none cursor-pointer"
-                    onChange={(e) => setSelectedPlayer(e.target.value)}
+                    onChange={(e) => setSelectedPlayer(Number(e.target.value) || null)}
                     defaultValue=""
                 >
                     <option value="" disabled>-- Choisir dans la liste --</option>
@@ -176,6 +213,16 @@ export default function Attribution() {
                 </select>
             </div>
 
+            {selectedPlayer && (
+                <div className="mb-6 p-4 rounded-2xl bg-[#0f3b2c] border border-[#15803d]/40 text-sm text-emerald-200">
+                    {hasReachedMaxMatches ? (
+                        <span>⛔ Ce joueur a déjà joué ses 180 matchs.</span>
+                    ) : (
+                        <span>Matchs joués : <strong>{selectedPlayerMatches}</strong> / 180</span>
+                    )}
+                </div>
+            )}
+
             {/* MESSAGE DE CONFIRMATION (Feedback) */}
             {lastAction && (
                 <div className="mb-6 p-4 bg-emerald-500/20 border border-emerald-500/50 rounded-xl text-emerald-300 text-center text-sm font-bold animate-pulse">
@@ -184,7 +231,7 @@ export default function Attribution() {
             )}
 
             {/* 2. BOUTONS D'ACTION (Grille 2x2) */}
-            <div className={`grid grid-cols-2 gap-4 transition-opacity duration-300 mb-8 ${!selectedPlayer ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'}`}>
+            <div className={`grid grid-cols-2 gap-4 transition-opacity duration-300 mb-8 ${!selectedPlayer || hasReachedMaxMatches ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'}`}>
                 
                 {/* VICTOIRE CAPOT (+6) */}
                 <button 
@@ -222,22 +269,22 @@ export default function Attribution() {
                     </div>
                 </button>
 
-                {/* DÉFAITE SIMPLE (0) */}
+                {/* DÉFAITE SIMPLE (-3) */}
                 <button 
-                    onClick={() => handlePrepareAttribution('Défaite Simple', 0)}
+                    onClick={() => handlePrepareAttribution('Défaite Simple', -3)}
                     className="bg-[#374151] rounded-2xl p-4 flex flex-col items-center justify-center gap-2 shadow-lg border border-gray-500/30 active:scale-95 transition-transform group hover:bg-[#4b5563]"
                 >
                     <span className="text-3xl group-hover:scale-110 transition-transform">❌</span>
                     <div className="text-center">
                         <p className="font-bold text-gray-200 leading-tight">DÉFAITE<br/>SIMPLE</p>
-                        <p className="text-xl font-black text-gray-400 mt-1">0</p>
+                        <p className="text-xl font-black text-gray-400 mt-1">-3</p>
                     </div>
                 </button>
 
             </div>
 
             {/* 3. ATTRIBUTION PERSONNALISÉE */}
-            <div className={`bg-[#064e3b]/30 backdrop-blur-md p-6 rounded-2xl border border-[#fbbf24]/20 mb-8 transition-opacity duration-300 ${!selectedPlayer ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'}`}>
+            <div className={`bg-[#064e3b]/30 backdrop-blur-md p-6 rounded-2xl border border-[#fbbf24]/20 mb-8 transition-opacity duration-300 ${!selectedPlayer || hasReachedMaxMatches ? 'opacity-50 pointer-events-none grayscale' : 'opacity-100'}`}>
                 <h3 className="text-sm font-bold text-emerald-400 uppercase tracking-widest border-b border-emerald-500/30 pb-2 mb-4">
                     ⚙️ Attribution Personnalisée
                 </h3>
@@ -257,9 +304,9 @@ export default function Attribution() {
                     
                     <button
                         onClick={handlePrepareCustomAttribution}
-                        disabled={isConfirming || !customPoints}
+                        disabled={isConfirming || !customPoints || hasReachedMaxMatches}
                         className={`w-full py-3 rounded-xl font-bold uppercase tracking-wider text-sm transition-all
-                            ${customPoints && !isConfirming
+                            ${customPoints && !isConfirming && !hasReachedMaxMatches
                                 ? 'bg-linear-to-r from-emerald-500 to-emerald-700 text-white shadow-lg hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] active:scale-95' 
                                 : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'}
                         `}
@@ -300,7 +347,7 @@ export default function Attribution() {
                     
                     <button
                         onClick={handleConfirmAttribution}
-                        disabled={isConfirming}
+                        disabled={isConfirming || hasReachedMaxMatches}
                         className="px-8 py-3 font-bold rounded-lg shadow-lg bg-linear-to-r from-emerald-500 to-emerald-700 text-white hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all duration-300 tracking-wider mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                         {isConfirming ? 'Attribution en cours...' : `Confirmer l'attribution : ${pendingAttribution.points > 0 ? '+' : ''}${pendingAttribution.points} pts`}

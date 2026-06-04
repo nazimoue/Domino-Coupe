@@ -16,7 +16,7 @@ export default function Explication() {
         <h2 className="text-lg font-semibold text-[#fde68a] mt-4">Valeur des manches</h2>
         <ul className="list-disc ml-5 mb-4 text-emerald-200">
           <li>Victoire simple : <strong className="text-[#fbbf24]">+3 pts</strong></li>
-          <li>Défaite : <strong className="text-[#fbbf24]">0 pts</strong></li>
+          <li>Défaite : <strong className="text-[#fbbf24]">-3 pts</strong></li>
           <li>Victoire Capot : <strong className="text-[#fbbf24]">+6 pts</strong></li>
           <li>Défaite Capot : <strong className="text-[#fbbf24]">-6 pts</strong></li>
         </ul>
@@ -36,28 +36,28 @@ export default function Explication() {
             <tbody className="text-sm text-emerald-200">
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Très fort</td>
-                <td className="px-3 py-2">≥ 120</td>
-                <td className="px-3 py-2">Élites constantes ; ~85% victoires.</td>
+                <td className="px-3 py-2">≥ 600</td>
+                <td className="px-3 py-2">Joueurs d’élite avec un score très élevé.</td>
               </tr>
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Fort</td>
-                <td className="px-3 py-2">70 - 119</td>
-                <td className="px-3 py-2">Très bons ; ~70% victoires.</td>
+                <td className="px-3 py-2">300 - 599</td>
+                <td className="px-3 py-2">Très solides, souvent gagnants.</td>
               </tr>
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Moyen</td>
-                <td className="px-3 py-2">25 - 69</td>
-                <td className="px-3 py-2">Équilibrés ; ~50% victoires.</td>
+                <td className="px-3 py-2">100 - 299</td>
+                <td className="px-3 py-2">Performances équilibrées.</td>
               </tr>
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Faible</td>
-                <td className="px-3 py-2">5 - 24</td>
-                <td className="px-3 py-2">Occasionnels ; ~30% victoires.</td>
+                <td className="px-3 py-2">-99 à 99</td>
+                <td className="px-3 py-2">Score proche de l’équilibre.</td>
               </tr>
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Médiocre</td>
-                <td className="px-3 py-2">0 - 4</td>
-                <td className="px-3 py-2">Peu de succès ; &lt;20% victoires stables.</td>
+                <td className="px-3 py-2">≤ -100</td>
+                <td className="px-3 py-2">Résultats négatifs constants.</td>
               </tr>
             </tbody>
           </table>

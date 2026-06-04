@@ -78,6 +78,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: `Erreur check joueur: ${err instanceof Error ? err.message : 'Erreur inconnue'}` }, { status: 500 });
     }
 
+    // Vérifier et mettre à jour le compteur de matchs si la colonne existe
+    let matchesPlayed: number | null = null;
+    let hasMatchCountColumn = true;
+
+    try {
+      const { data: playerMatchData, error: playerMatchError } = await supabaseServer
+        .from('players')
+        .select('matches_played')
+        .eq('id', normalizedPlayerId)
+        .single();
+
+      if (playerMatchError) {
+        if (String(playerMatchError.message).toLowerCase().includes('matches_played')) {
+          hasMatchCountColumn = false;
+        } else {
+          console.error('Erreur Supabase matches_played:', playerMatchError);
+          return NextResponse.json({ error: `Erreur vérification compteur de matchs: ${playerMatchError.message}` }, { status: 500 });
+        }
+      } else {
+        matchesPlayed = Number(playerMatchData?.matches_played ?? 0);
+      }
+    } catch (err) {
+      // Si la colonne n'existe pas encore, on continue sans compteur
+      if (err instanceof Error && err.message.toLowerCase().includes('matches_played')) {
+        hasMatchCountColumn = false;
+      } else {
+        console.error('Erreur fetch matches_played:', err);
+        return NextResponse.json({ error: `Erreur vérification compteur de matchs: ${err instanceof Error ? err.message : 'Erreur inconnue'}` }, { status: 500 });
+      }
+    }
+
+    if (hasMatchCountColumn && matchesPlayed !== null && matchesPlayed >= 180) {
+      return NextResponse.json({ error: 'Ce joueur a déjà joué ses 180 matchs.' }, { status: 400 });
+    }
+
     // Détecter noms de colonnes (snake_case ou camelCase)
     const detect = await supabaseServer.from('score').select('*').limit(1);
     const sampleRow = Array.isArray(detect.data) ? detect.data[0] : null;
@@ -120,6 +155,18 @@ export async function POST(request: NextRequest) {
         { error: `Erreur lors de l'attribution: ${error.message}` },
         { status: 500 }
       );
+    }
+
+    if (hasMatchCountColumn && matchesPlayed !== null) {
+      try {
+        const newMatchCount = Math.min(180, matchesPlayed + 1);
+        await supabaseServer
+          .from('players')
+          .update({ matches_played: newMatchCount })
+          .eq('id', normalizedPlayerId);
+      } catch (updateError) {
+        console.error('Erreur mise à jour matches_played:', updateError);
+      }
     }
 
     return NextResponse.json({ success: true, data });
