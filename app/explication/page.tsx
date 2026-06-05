@@ -1,4 +1,3 @@
-/* eslint-disable react/no-unescaped-entities */
 import Link from 'next/link';
 
 export default function Explication() {
@@ -12,7 +11,7 @@ export default function Explication() {
         </p>
 
         <h2 className="text-lg font-semibold text-[#fde68a] mt-4">Condition de fin</h2>
-        <p className="mb-3 text-emerald-200">Le match se termine lorsque l'une des équipes atteint 150 points au total.</p>
+        <p className="mb-3 text-emerald-200">Le match se termine lorsque l&apos;une des équipes atteint 150 points au total.</p>
 
         <h2 className="text-lg font-semibold text-[#fde68a] mt-4">Valeur des manches</h2>
         <ul className="list-disc ml-5 mb-4 text-emerald-200">
@@ -23,7 +22,7 @@ export default function Explication() {
         </ul>
 
         <h2 className="text-lg font-semibold text-[#fde68a] mt-4">Calcul du niveau des joueurs</h2>
-        <p className="mb-3 text-emerald-200">Le niveau d'un joueur est calculé à partir de son total de points selon les intervalles suivants :</p>
+        <p className="mb-3 text-emerald-200">Le niveau d&apos;un joueur est calculé à partir de son total de points selon les intervalles suivants :</p>
 
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -38,7 +37,7 @@ export default function Explication() {
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Très fort</td>
                 <td className="px-3 py-2">≥ 600</td>
-                <td className="px-3 py-2">Joueurs d’élite avec un score très élevé.</td>
+                <td className="px-3 py-2">Joueurs d&apos;élite avec un score très élevé.</td>
               </tr>
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Fort</td>
@@ -53,7 +52,7 @@ export default function Explication() {
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Faible</td>
                 <td className="px-3 py-2">-99 à 99</td>
-                <td className="px-3 py-2">Score proche de l’équilibre.</td>
+                <td className="px-3 py-2">Score proche de l&apos;équilibre.</td>
               </tr>
               <tr className="border-t border-[#fbbf24]/10">
                 <td className="px-3 py-2 font-semibold">Médiocre</td>

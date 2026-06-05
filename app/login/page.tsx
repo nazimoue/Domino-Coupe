@@ -1,19 +1,14 @@
 'use client';
-/* eslint-disable react/no-unescaped-entities */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { authSignIn, authSignOut } from '@/lib/db';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -21,7 +16,7 @@ export default function Login() {
     setIsLoading(true);
     setError('');
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await authSignIn(email, password);
     if (error) {
       setError('Email ou mot de passe incorrect');
       setIsLoading(false);
@@ -33,7 +28,7 @@ export default function Login() {
       router.push('/');
     } else {
       setError("Connexion impossible");
-      await supabase.auth.signOut();
+      await authSignOut();
     }
     setIsLoading(false);
   };
@@ -50,7 +45,7 @@ export default function Login() {
 
         {/* Particules / Étoiles (CSS pur) */}
         <div className="absolute inset-0 opacity-30"
-          style={mounted ? { backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '50px 50px' } : undefined}>
+          style={{ backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '50px 50px' }}>
         </div>
 
         {/* Halo lumineux central */}

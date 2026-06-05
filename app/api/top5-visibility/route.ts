@@ -10,7 +10,7 @@ async function readFlag(): Promise<boolean> {
     const raw = await fs.promises.readFile(FILE_PATH, 'utf-8');
     const parsed = JSON.parse(raw || '{}');
     return typeof parsed.visible === 'boolean' ? parsed.visible : true;
-  } catch (err) {
+  } catch {
     return true;
   }
 }
@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     }
     await writeFlag(visible);
     return NextResponse.json({ success: true, visible });
-  } catch (err) {
-    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
+  } catch (error) {
+    return NextResponse.json({ success: false, error: String(error) }, { status: 500 });
   }
 }

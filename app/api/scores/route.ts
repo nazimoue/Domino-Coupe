@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createScore, getScores } from '@/lib/db';
+import { createScore, getScores } from '@/lib/db.server';
 
 // POST: add a score or batch of scores
 export async function POST(request: NextRequest) {

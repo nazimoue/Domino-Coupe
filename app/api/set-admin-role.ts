@@ -1,15 +1,15 @@
-import { supabase } from '@/lib/supabaseClient';
-import { setUserRole } from '@/lib/db';
+import { authGetUser } from '@/lib/db';
+import { setUserRole } from '@/lib/db.server';
 
 export async function POST(request: Request) {
   // Verify that the caller is authenticated and has admin role
-  const { data: authData, error: authError } = await supabase.auth.getUser();
+  const { data: authData, error: authError } = await authGetUser();
   if (authError || !authData?.user) {
     return new Response(JSON.stringify({ success: false, error: 'Authentication required' }), { status: 401 });
   }
   const currentUser = authData.user;
-  // Assuming role is stored in user_metadata.role
-  const role = (currentUser.user_metadata as Record<string, unknown>)?.role as string | undefined;
+  const metadata = (currentUser as { user_metadata?: Record<string, unknown> } | undefined)?.user_metadata;
+  const role = (metadata?.role as string | undefined) ?? (currentUser as { role?: string } | undefined)?.role;
   if (role !== 'admin') {
     return new Response(JSON.stringify({ success: false, error: 'Admin privileges required' }), { status: 403 });
   }

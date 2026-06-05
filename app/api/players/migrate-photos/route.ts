@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabaseClient';
 import { NextRequest, NextResponse } from 'next/server';
+import { fetchAllPlayers, updatePlayerPhoto, uploadPhoto } from '@/lib/db.server';
 
 // Endpoint server-side pour migrer les photos stockées en data URLs vers Supabase Storage.
 // Sécurisé par une clef simple à fournir dans le body: { secret: process.env.MIGRATE_PHOTOS_SECRET }
@@ -26,16 +26,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Secret invalide' }, { status: 403 });
     }
 
-    // Récupérer tous les joueurs
-    const { data: players, error: fetchError } = await supabase.from('players').select('id, photo');
-    if (fetchError) {
-      console.error('Erreur fetch players:', fetchError);
-      return NextResponse.json({ error: fetchError.message }, { status: 500 });
-    }
+    const players = await fetchAllPlayers();
+    const playerList = Array.isArray(players) ? players : [];
 
     const migrated: Array<{ id: number; url?: string; error?: string }> = [];
 
-    for (const p of players || []) {
+    for (const p of playerList) {
       try {
         const photo = p.photo as unknown;
         if (!photo || typeof photo !== 'string') {
@@ -72,31 +68,21 @@ export async function POST(request: NextRequest) {
         }
 
         const buffer = Buffer.from(base64Data, 'base64');
-        // Détection extension basique
         const ext = mime.split('/')[1] || 'jpg';
         const filePath = `players/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-        const { data: uploadData, error: uploadError } = await supabase.storage.from('player-photos').upload(filePath, buffer, { contentType: mime });
-        if (uploadError) {
-          console.error('Erreur upload:', uploadError);
-          migrated.push({ id: p.id, error: uploadError.message });
+        const publicUrl = await uploadPhoto(buffer, mime, filePath);
+        if (!publicUrl) {
+          migrated.push({ id: p.id, error: 'Impossible d\'uploader la photo' });
           continue;
         }
-
-        const { data: publicData } = supabase.storage.from('player-photos').getPublicUrl(filePath);
-        const publicUrl = publicData?.publicUrl || null;
 
         if (!publicUrl) {
           migrated.push({ id: p.id, error: 'Impossible d\'obtenir publicUrl' });
           continue;
         }
 
-        // Mettre à jour le joueur
-        const { error: updateError } = await supabase.from('players').update({ photo: publicUrl }).eq('id', p.id);
-        if (updateError) {
-          migrated.push({ id: p.id, error: updateError.message });
-          continue;
-        }
+        await updatePlayerPhoto(Number(p.id), publicUrl);
 
         migrated.push({ id: p.id, url: publicUrl });
       } catch (err: unknown) {

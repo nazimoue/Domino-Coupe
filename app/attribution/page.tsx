@@ -1,8 +1,6 @@
 'use client';
-/* eslint-disable react/no-unescaped-entities */
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import Link from 'next/link';
 const TOURNAMENT_DAYS = Array.from({ length: 30 }, (_, i) => {
     const date = new Date(2026, 1, 19 + i);
@@ -21,8 +19,6 @@ export default function Attribution() {
     const [lastAction, setLastAction] = useState<string | null>(null);
     const [pendingAttribution, setPendingAttribution] = useState<{ type: string, points: number } | null>(null);
     const [isConfirming, setIsConfirming] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
     const [accumulatedPoints, setAccumulatedPoints] = useState(0);
     const [accumulationList, setAccumulationList] = useState<Array<{ type: string, points: number }>>([]);
@@ -31,26 +27,23 @@ export default function Attribution() {
     const selectedPlayerMatches = selectedPlayerObj?.matches_played ?? 0;
     const hasReachedMaxMatches = selectedPlayerObj ? selectedPlayerMatches >= 180 : false;
 
-    // Charger les joueurs depuis Supabase au montage
+    // Charger les joueurs depuis l'API DB abstraite au montage
     useEffect(() => {
         const fetchPlayers = async () => {
-            // On récupère le prénom et le compteur de matchs si la colonne existe.
-            const { data, error } = await supabase.from('players').select('id, prenom, matches_played');
-            if (error && String(error.message).toLowerCase().includes('matches_played')) {
-                const { data: fallbackData, error: fallbackError } = await supabase.from('players').select('id, prenom');
-                if (!fallbackError && fallbackData) {
-                    setPlayers(fallbackData.map((player: any) => ({
+            try {
+                const response = await fetch('/api/players');
+                const result = await response.json();
+
+                if (result.success && Array.isArray(result.data)) {
+                    type PlayerFromApi = { id?: number | string; prenom?: string; matches_played?: number | string };
+                    setPlayers(result.data.map((player: PlayerFromApi) => ({
                         ...player,
                         id: Number(player.id),
-                        matches_played: 0,
+                        matches_played: player.matches_played ? Number(player.matches_played) : 0,
                     })));
                 }
-            } else if (!error && data) {
-                setPlayers(data.map((player: any) => ({
-                    ...player,
-                    id: Number(player.id),
-                    matches_played: player.matches_played ? Number(player.matches_played) : 0,
-                })));
+            } catch (error) {
+                console.error('Erreur lors du chargement des joueurs:', error);
             }
         };
         fetchPlayers();
@@ -150,7 +143,7 @@ export default function Attribution() {
             {/* FOND (Identique) */}
             <div className="fixed inset-0 z-0 pointer-events-none">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
-                <div className="absolute inset-0 opacity-20" style={mounted ? { backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' } : undefined}></div>
+                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
             </div>
 
             {/* CONTENU */}
@@ -200,7 +193,7 @@ export default function Attribution() {
                     <label className="text-xs uppercase tracking-widest text-emerald-400 font-bold mb-2 block pl-1">Sélectionner un Joueur</label>
                     <select
                         className="w-full bg-[#064e3b]/50 border border-[#fbbf24]/30 rounded-xl p-4 text-[#fff7ed] outline-none focus:border-[#fbbf24] focus:ring-1 focus:ring-[#fbbf24] transition-all appearance-none cursor-pointer"
-                        onChange={(e) => setSelectedPlayer(e.target.value)}
+                        onChange={(e) => setSelectedPlayer(e.target.value ? Number(e.target.value) : null)}
                         defaultValue=""
                     >
                         <option value="" disabled>-- Choisir dans la liste --</option>
@@ -298,7 +291,7 @@ export default function Attribution() {
                                     : 'bg-gray-800 text-gray-500 cursor-not-allowed border border-gray-700'}
                         `}
                         >
-                            Préparer l'attribution
+                            Préparer l&apos;attribution
                         </button>
                     </div>
                 </div>
@@ -337,7 +330,7 @@ export default function Attribution() {
                             disabled={isConfirming}
                             className="px-8 py-3 font-bold rounded-lg shadow-lg bg-linear-to-r from-emerald-500 to-emerald-700 text-white hover:shadow-[0_0_30px_rgba(16,185,129,0.4)] transition-all duration-300 tracking-wider mt-2 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
-                            {isConfirming ? 'Attribution en cours...' : `Confirmer l'attribution : ${pendingAttribution.points > 0 ? '+' : ''}${pendingAttribution.points} pts`}
+                            {isConfirming ? 'Attribution en cours...' : `Confirmer l&apos;attribution : ${pendingAttribution.points > 0 ? '+' : ''}${pendingAttribution.points} pts`}
                         </button>
 
                         {/* bouton d'annonce déplacé vers le header (disponible indépendamment) */}
@@ -361,7 +354,7 @@ export default function Attribution() {
                 {/* Note en bas */}
                 <div className="mt-8 text-center px-8">
                     <p className="text-[10px] text-emerald-500/60 uppercase tracking-widest leading-relaxed">
-                        Sélectionnez un joueur, un jour, puis l'action souhaitée.
+                        Sélectionnez un joueur, un jour, puis l&apos;action souhaitée.
                     </p>
                 </div>
 

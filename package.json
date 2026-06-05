@@ -6,9 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "lint": "eslint",
+    "prisma:generate": "npx prisma generate",
+    "prisma:sqlite:migrate": "cross-env PRISMA_PROVIDER=sqlite DATABASE_URL='file:./prisma/dev.db' npx prisma migrate dev --name init --migrations-dir=prisma/migrations_sqlite",
+    "prisma:sqlite:reset": "cross-env PRISMA_PROVIDER=sqlite DATABASE_URL='file:./prisma/dev.db' npx prisma migrate reset --force",
+    "prisma:supabase:migrate": "cross-env PRISMA_PROVIDER=postgresql npx prisma migrate dev --name init --migrations-dir=prisma/migrations_postgres",
+    "prisma:supabase:deploy": "cross-env PRISMA_PROVIDER=postgresql npx prisma migrate deploy",
+    "prisma:supabase:reset": "cross-env PRISMA_PROVIDER=postgresql npx prisma migrate reset --force"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
     "@prisma/client": "^7.3.0",
     "@supabase/supabase-js": "^2.95.3",
     "next": "^16.2.7",
@@ -17,6 +28,7 @@
     "react-dom": "19.2.3"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

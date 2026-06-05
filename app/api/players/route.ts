@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabaseClient';
+import { createPlayer, deletePhoto, deletePlayer, fetchAllPlayers, getPlayerById } from '@/lib/db.server';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
     // Préparer les données à insérer
     const playerData: Record<string, unknown> = {
       name,
-      prenom,
+      nom: String(name ?? '').trim() || String(prenom ?? '').trim(),
+      prenom: String(prenom ?? '').trim(),
       photo: null,
       niveau: normalizeNiveau(niveau),
     };
@@ -79,18 +80,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Insérer dans Supabase
-    const { data, error } = await supabase
-      .from('players')
-      .insert([playerData])
-      .select();
+    const data = await createPlayer(playerData);
 
-    if (error) {
-      console.error('Erreur Supabase:', error);
-      return NextResponse.json(
-        { error: `Erreur lors de la création du joueur: ${error.message}` },
-        { status: 500 }
-      );
-    }
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
@@ -104,19 +95,7 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
-      .from('players')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Erreur Supabase GET:', error);
-      return NextResponse.json(
-        { error: `Erreur lors de la récupération des joueurs: ${error.message}` },
-        { status: 500 }
-      );
-    }
-
+    const data = await fetchAllPlayers();
     return NextResponse.json({ success: true, data: data || [] });
   } catch (error) {
     console.error('Erreur serveur:', error);
@@ -139,49 +118,17 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Récupérer le joueur pour éventuellement supprimer la photo du storage
-    const { data: existingPlayer, error: fetchError } = await supabase
-      .from('players')
-      .select('photo')
-      .eq('id', id)
-      .single();
+    const playerToDelete = (await getPlayerById(Number(id))) as { photo?: string } | null;
 
-    if (fetchError) {
-      console.error('Erreur fetch joueur avant suppression:', fetchError);
-      return NextResponse.json({ error: `Erreur: ${fetchError.message}` }, { status: 500 });
-    }
-
-    // Si la photo est une URL publique Supabase Storage, tenter de supprimer l'objet
-    try {
-      const photoVal = existingPlayer?.photo;
-      if (photoVal && typeof photoVal === 'string') {
-        // Détecter un chemin public Supabase contenant le bucket 'player-photos'
-        // Exemple d'URL: https://xyz.supabase.co/storage/v1/object/public/player-photos/players/xxx.jpg
-        const match = photoVal.match(/player-photos\/(.+)$/);
-        if (match && match[1]) {
-          const objectPath = match[1];
-          const { error: removeError } = await supabase.storage.from('player-photos').remove([objectPath]);
-          if (removeError) {
-            console.warn('Impossible de supprimer l\'objet storage (non bloquant):', removeError);
-          }
-        }
+    if (playerToDelete?.photo) {
+      try {
+        await deletePhoto(String(playerToDelete.photo));
+      } catch (err) {
+        console.warn('Erreur lors de la suppression de la photo (non bloquante):', err);
       }
-    } catch (err) {
-      console.warn('Erreur lors suppression photo storage (non bloquant):', err);
     }
 
-    const { error } = await supabase
-      .from('players')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      console.error('Erreur Supabase DELETE:', error);
-      return NextResponse.json(
-        { error: `Erreur lors de la suppression: ${error.message}` },
-        { status: 500 }
-      );
-    }
+    await deletePlayer(Number(id));
 
     return NextResponse.json({ success: true });
   } catch (error) {

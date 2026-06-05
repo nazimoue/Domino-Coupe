@@ -1,11 +1,7 @@
-/* eslint-disable react/no-unescaped-entities */
 'use client';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
 
 export default function Rules() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
   const rules = [
     "كي ماتڤولش حجرة",
@@ -34,7 +30,7 @@ export default function Rules() {
       {/* BACKGROUND EFFECTS */}
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
-        <div className="absolute inset-0 opacity-20" style={mounted ? { backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '30px 30px' } : undefined}></div>
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#fbbf24 0.5px, transparent 0.5px)', backgroundSize: '30px 30px' }}></div>
       </div>
 
       {/* HEADER SECTION */}

@@ -1,4 +1,15 @@
 -- CreateTable
+CREATE TABLE "Player" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "prenom" TEXT NOT NULL,
+    "nom" TEXT NOT NULL,
+    "niveau" TEXT NOT NULL DEFAULT 'MEDIOCRE',
+    "matches_played" INTEGER NOT NULL DEFAULT 0,
+    "photo" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- CreateTable
 CREATE TABLE "Score" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "player_id" INTEGER NOT NULL,
@@ -7,14 +18,4 @@ CREATE TABLE "Score" (
     "date" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "day" INTEGER,
     CONSTRAINT "Score_player_id_fkey" FOREIGN KEY ("player_id") REFERENCES "Player" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-);
-
--- CreateTable
-CREATE TABLE "Player" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "prenom" TEXT NOT NULL,
-    "nom" TEXT NOT NULL,
-    "niveau" TEXT,
-    "photo" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

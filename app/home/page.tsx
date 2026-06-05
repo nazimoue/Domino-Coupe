@@ -1,21 +1,17 @@
 'use client';
-/* eslint-disable react/no-unescaped-entities */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import Link from 'next/link';
+import { authGetUser, authSignOut } from '@/lib/db';
 import AdhanClock from '@/app/components/AdhanClock';
+import Link from 'next/link';
 
 export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     let cancelled = false;
     const checkUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await authGetUser();
       if (!cancelled) setIsConnected(!!user);
     };
     checkUser();
@@ -23,7 +19,7 @@ export default function Home() {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await authSignOut();
     setIsConnected(false);
     window.location.reload();
   };
@@ -35,7 +31,7 @@ export default function Home() {
       <div className="absolute inset-0 z-0">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--tw-gradient-stops))] from-[#0b1730] via-[#0c2b5d] to-[#041336]"></div>
         <div className="absolute inset-0 opacity-20"
-          style={mounted ? { backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '40px 40px' } : undefined}>
+          style={{ backgroundImage: 'radial-gradient(white 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
         </div>
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[400px] bg-sky-500/10 rounded-full blur-[120px]"></div>
       </div>

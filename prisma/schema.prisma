@@ -7,8 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
 }
 
 model Score {
@@ -25,18 +24,9 @@ model Player {
   id             Int      @id @default(autoincrement())
   prenom         String
   nom            String
-  niveau         Niveau  @default(MEDIOCRE)
+  niveau         String   @default("MEDIOCRE")
   matches_played Int      @default(0)
-  photo          Bytes?
+  photo          String?
   createdAt      DateTime @default(now())
   scores         Score[]
-}
-
-
-enum Niveau {
-  MEDIOCRE
-  FAIBLE
-  MOYEN
-  FORT
-  TRES_FORT
 }

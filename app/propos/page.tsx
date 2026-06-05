@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-/* eslint-disable react/no-unescaped-entities */
+
 
 export default function ProposPage() {
 	return (
@@ -31,7 +31,7 @@ export default function ProposPage() {
 							href="/home"
 							className="px-8 py-3 font-bold text-base rounded-lg shadow-lg transition-all duration-300 tracking-wider bg-linear-to-r from-[#fbbf24] to-[#fcd34d] text-[#064e3b] hover:shadow-[0_0_30px_rgba(251,191,36,0.4)]"
 						>
-							← Retour à l'accueil
+							← Retour à l&apos;accueil
 						</Link>
 					</div>
 				</div>

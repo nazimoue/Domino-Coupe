@@ -1,5 +1,4 @@
-import { getPlayerById, updatePlayerPhoto } from '@/lib/db';
-import { supabase } from '@/lib/supabaseClient';
+import { deletePhoto, getPlayerById, updatePlayerPhoto, uploadPhoto } from '@/lib/db.server';
 import { NextRequest, NextResponse } from 'next/server';
 
 // PUT: update player's photo (and delete old storage object if present)
@@ -13,7 +12,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const { photo } = body;
 
     // Récupérer le joueur existant
-    const existingPlayer = await getPlayerById(id);
+    const existingPlayer = (await getPlayerById(id)) as { photo?: string } | null;
 
 
     let newPhotoValue: string | null = null;
@@ -30,13 +29,12 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         const ext = mime.split('/')[1] || 'jpg';
         const filePath = `players/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
-        const { error: uploadError } = await supabase.storage.from('player-photos').upload(filePath, buffer, { contentType: mime });
-        if (uploadError) {
-          console.error('Upload error:', uploadError);
-          return NextResponse.json({ error: 'Erreur upload image' }, { status: 500 });
+        const uploadedUrl = await uploadPhoto(buffer, mime, filePath);
+        if (!uploadedUrl) {
+          newPhotoValue = `data:${mime};base64,${base64}`;
+        } else {
+          newPhotoValue = uploadedUrl;
         }
-        const { data: publicData } = supabase.storage.from('player-photos').getPublicUrl(filePath);
-        newPhotoValue = publicData?.publicUrl || null;
       } else if (photo.startsWith('http://') || photo.startsWith('https://') || photo.startsWith('/')) {
         // public URL already
         newPhotoValue = photo;
@@ -50,11 +48,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     try {
       const oldPhoto = existingPlayer?.photo;
       if (oldPhoto && typeof oldPhoto === 'string') {
-        const match = oldPhoto.match(/player-photos\/(.+)$/);
-        if (match && match[1]) {
-          const objectPath = match[1];
-          const { error: removeError } = await supabase.storage.from('player-photos').remove([objectPath]);
-          if (removeError) console.warn('Suppression ancien objet storage non critique:', removeError.message);
+        try {
+          await deletePhoto(oldPhoto);
+        } catch (err) {
+          console.warn('Suppression ancien objet storage non critique:', err);
         }
       }
     } catch (err) {

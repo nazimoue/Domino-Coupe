@@ -1,7 +1,5 @@
-/* eslint-disable react/no-unescaped-entities */
 import fs from 'fs';
 import path from 'path';
-import React from 'react';
 import TeamClient from './TeamClient';
 
 export default function TeamPage() {

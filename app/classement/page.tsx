@@ -31,8 +31,6 @@ type PlayerInfo = {
 };
 import Link from 'next/link';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabaseClient';
-import type { User } from '@supabase/supabase-js';
 
 // Liste des jours du tournoi (Jeudis et vendredis du 11 juin au 31 décembre)
 const TOURNAMENT_DAYS = (() => {
@@ -64,10 +62,6 @@ export default function Classement() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<User | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [isVisitorAllowed, setIsVisitorAllowed] = useState(false);
-  const [countdown, setCountdown] = useState<string>('');
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null);
   const [rankingType, setRankingType] = useState<'normal' | 'capot'>('normal');
   const [mounted, setMounted] = useState(false);
@@ -78,35 +72,6 @@ export default function Classement() {
     fetchData();
   }, []);
 
-  // Vérifier l'auth et règles d'accès pour les visiteurs non-connectés
-  useEffect(() => {
-    let mounted = true;
-    const checkAuth = async () => {
-      try {
-        const { data } = await supabase.auth.getUser();
-        const u = data?.user || null;
-        if (!mounted) return;
-        setUser(u);
-        const admin = !!u?.user_metadata?.role && u.user_metadata.role === 'admin';
-        setIsAdmin(admin);
-
-        // Accès sans restriction horaire pour tous
-        setIsVisitorAllowed(true);
-      } catch (err) {
-        console.error('Auth check error', err);
-      }
-    };
-
-    checkAuth();
-
-    return () => { mounted = false; };
-  }, []);
-
-  // Countdown timer for visitors (updates every second)
-  useEffect(() => {
-    // Pas de limitation horaire, donc pas besoin de countdown
-    setCountdown('');
-  }, []);
 
   // Charger les données depuis l'API
   const fetchData = async () => {
@@ -232,8 +197,6 @@ export default function Classement() {
   const getPlayerPhoto = (playerId: number): string | null => {
     const player = players.find(p => p.id === playerId);
     if (!player?.photo) return null;
-
-    let photoData: string;
 
     // Si c'est déjà une string (data URL, base64 pur ou URL publique)
     if (typeof player.photo === 'string') {

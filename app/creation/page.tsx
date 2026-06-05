@@ -1,10 +1,9 @@
 "use client";
-/* eslint-disable react/no-unescaped-entities */
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { supabase } from '@/lib/supabaseClient';
+import { uploadPhoto } from '@/lib/db';
 
 type Player = {
   id: number;
@@ -97,22 +96,19 @@ export default function CreationJoueur() {
           const fileExt = photoFile.name.split('.').pop();
           const filePath = `players/${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
 
-          const { error: uploadError } = await supabase.storage
-            .from('player-photos')
-            .upload(filePath, photoFile as File);
-
-          if (uploadError) {
-            console.error('Upload Supabase error:', uploadError);
-            // fallback : envoyer data URL au serveur (déjà géré côté API)
+          // Generic upload via DB provider
+          const mime = photoFile.type;
+          const buffer = Buffer.from(await photoFile.arrayBuffer());
+          const publicUrl = await uploadPhoto(buffer, mime, filePath);
+          if (!publicUrl) {
+            console.error('Upload error via generic provider');
             const reader = new FileReader();
             photoUrl = await new Promise<string>((resolve) => {
               reader.onloadend = () => resolve(reader.result as string);
               reader.readAsDataURL(photoFile as File);
             });
           } else {
-            // Récupérer l'URL publique
-            const { data: publicData } = supabase.storage.from('player-photos').getPublicUrl(filePath);
-            photoUrl = publicData?.publicUrl || null;
+            photoUrl = publicUrl;
           }
         } catch (error: unknown) {
           console.error('Erreur upload supabase:', error);
