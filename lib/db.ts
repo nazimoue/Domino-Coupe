@@ -86,10 +86,30 @@ export async function authSignOut() {
 }
 
 export async function uploadPhoto(buffer: Buffer, mime: string, filePath: string) {
-  void buffer;
-  void mime;
-  void filePath;
-  return null;
+  const supabase = getSupabaseClient();
+  if (!supabase) {
+    console.error('Supabase config missing - cannot upload photo');
+    return null;
+  }
+  try {
+    const { data, error: uploadError } = await supabase.storage
+      .from('player-photos')
+      .upload(filePath, buffer, { contentType: mime, upsert: false });
+    if (uploadError) {
+      console.error('Supabase upload error:', uploadError.message);
+      return null;
+    }
+    if (data?.path) {
+      const { data: publicData } = supabase.storage
+        .from('player-photos')
+        .getPublicUrl(data.path);
+      return publicData?.publicUrl ?? null;
+    }
+    return null;
+  } catch (e) {
+    console.error('Unexpected upload error:', e);
+    return null;
+  }
 }
 
 export async function deletePhoto(publicUrl: string) {
