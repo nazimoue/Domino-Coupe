@@ -21,9 +21,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
     return NextResponse.json({ success: true, photo: newPhotoValue });
   } catch (error: unknown) {
-    console.error('Erreur PUT player photo:', error);
-    const message = error instanceof Error ? error.message : 'Erreur inconnue';
-    return NextResponse.json({ error: message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : typeof error === 'object' && error ? JSON.stringify(error) : String(error);
+    console.error('Erreur PUT player photo:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 

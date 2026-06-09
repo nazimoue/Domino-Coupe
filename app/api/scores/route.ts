@@ -61,8 +61,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, data: inserted });
   } catch (error) {
-    console.error('Erreur serveur:', error);
-    return NextResponse.json({ error: `Erreur serveur: ${error instanceof Error ? error.message : 'Erreur inconnue'}` }, { status: 500 });
+    const msg = error instanceof Error ? error.message : typeof error === 'object' && error ? JSON.stringify(error) : String(error);
+    console.error('Erreur serveur:', msg);
+    return NextResponse.json({ error: `Erreur serveur: ${msg}` }, { status: 500 });
   }
 }
 
@@ -77,7 +78,8 @@ export async function GET(request: NextRequest) {
       const data = await getScores(filters);
       return NextResponse.json({ success: true, data });
     } catch (error) {
-      console.error('Erreur serveur:', error);
-      return NextResponse.json({ error: `Erreur serveur: ${error instanceof Error ? error.message : 'Erreur inconnue'}` }, { status: 500 });
+      const msg = error instanceof Error ? error.message : typeof error === 'object' && error ? JSON.stringify(error) : String(error);
+      console.error('Erreur serveur:', msg);
+      return NextResponse.json({ error: `Erreur serveur: ${msg}` }, { status: 500 });
     }
   }
