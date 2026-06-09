@@ -1,4 +1,4 @@
-import { deletePhoto, getPlayerById, updatePlayerPhoto, uploadPhoto } from '@/lib/db.server';
+import { getPlayerById, updatePlayerPhoto } from '@/lib/dbFacade.server';
 import { NextRequest, NextResponse } from 'next/server';
 
 // PUT: update player's photo (and delete old storage object if present)
@@ -11,51 +11,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const body = await request.json();
     const { photo } = body;
 
-    // Récupérer le joueur existant
-    const existingPlayer = (await getPlayerById(id)) as { photo?: string } | null;
-
-
     let newPhotoValue: string | null = null;
-
-    // Si le client envoie une data URL, on upload vers storage
     if (photo && typeof photo === 'string') {
-      if (photo.startsWith('data:')) {
-        // extraire mime & base64
-        const matches = photo.match(/^data:(.+);base64,(.+)$/);
-        if (!matches) return NextResponse.json({ error: 'Data URL invalide' }, { status: 400 });
-        const mime = matches[1];
-        const base64 = matches[2];
-        const buffer = Buffer.from(base64, 'base64');
-        const ext = mime.split('/')[1] || 'jpg';
-        const filePath = `players/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-
-        const uploadedUrl = await uploadPhoto(buffer, mime, filePath);
-        if (!uploadedUrl) {
-          newPhotoValue = `data:${mime};base64,${base64}`;
-        } else {
-          newPhotoValue = uploadedUrl;
-        }
-      } else if (photo.startsWith('http://') || photo.startsWith('https://') || photo.startsWith('/')) {
-        // public URL already
-        newPhotoValue = photo;
-      } else {
-        // base64 pur
-        newPhotoValue = `data:image/jpeg;base64,${photo}`;
-      }
-    }
-
-    // Supprimer l'ancien objet Storage si présent (pattern player-photos/...)
-    try {
-      const oldPhoto = existingPlayer?.photo;
-      if (oldPhoto && typeof oldPhoto === 'string') {
-        try {
-          await deletePhoto(oldPhoto);
-        } catch (err) {
-          console.warn('Suppression ancien objet storage non critique:', err);
-        }
-      }
-    } catch (err) {
-      console.warn('Erreur suppression ancien objet (non bloquant):', err);
+      newPhotoValue = photo;
     }
 
     // Mettre à jour la DB

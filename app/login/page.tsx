@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { authSignIn, authSignOut } from '@/lib/db';
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,21 +15,26 @@ export default function Login() {
     setIsLoading(true);
     setError('');
 
-    const { data, error } = await authSignIn(email, password);
-    if (error) {
-      setError('Email ou mot de passe incorrect');
+    try {
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.data?.user) {
+        sessionStorage.setItem('auth', JSON.stringify({ user: result.data.user }));
+        router.push('/');
+      } else {
+        setError(result.error?.message || 'Email ou mot de passe incorrect');
+      }
+    } catch (err) {
+      setError('Erreur de connexion au serveur');
+    } finally {
       setIsLoading(false);
-      return;
     }
-    // Permet l'accès à tout utilisateur connecté
-    const user = data.user;
-    if (user) {
-      router.push('/');
-    } else {
-      setError("Connexion impossible");
-      await authSignOut();
-    }
-    setIsLoading(false);
   };
 
   return (

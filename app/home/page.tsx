@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { authGetUser, authSignOut } from '@/lib/db';
 import AdhanClock from '@/app/components/AdhanClock';
 import Link from 'next/link';
 
@@ -9,17 +8,17 @@ export default function Home() {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-    const checkUser = async () => {
-      const { data: { user } } = await authGetUser();
-      if (!cancelled) setIsConnected(!!user);
-    };
-    checkUser();
-    return () => { cancelled = true; };
+    const auth = sessionStorage.getItem('auth');
+    setIsConnected(!!auth);
   }, []);
 
   const handleLogout = async () => {
-    await authSignOut();
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // Ignorer les erreurs de déconnexion
+    }
+    sessionStorage.removeItem('auth');
     setIsConnected(false);
     window.location.reload();
   };

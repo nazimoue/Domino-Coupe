@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { uploadPhoto } from '@/lib/db';
 
 type Player = {
   id: number;
@@ -40,7 +39,7 @@ export default function CreationJoueur() {
       const response = await fetch('/api/players');
       const result = await response.json();
       if (result.success) {
-        setPlayers(result.data || []);
+        setPlayers((result.data || []).map((p: Player) => ({ ...p, photo: null })));
       }
     } catch (error) {
       console.error('Erreur lors de la récupération des joueurs:', error);
@@ -52,9 +51,8 @@ export default function CreationJoueur() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validation simple côté client : type et taille
       const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
-      const maxSize = 5 * 1024 * 1024; // 5 MB
+      const maxSize = 5 * 1024 * 1024;
 
       if (!allowedTypes.includes(file.type)) {
         setFeedback('❌ Type d\'image non supporté. Utilisez PNG / JPEG / WEBP.');
@@ -69,9 +67,7 @@ export default function CreationJoueur() {
       }
 
       setPhotoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPhotoPreview(reader.result as string);
-      reader.readAsDataURL(file);
+      setPhotoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -87,51 +83,15 @@ export default function CreationJoueur() {
 
     setIsLoading(true);
     try {
-      let photoUrl: string | null = null;
-
-      // Si un fichier est sélectionné, on tente d'uploader vers Supabase Storage
-      if (photoFile) {
-        try {
-          // Nom de bucket attendu : 'player-photos' (créé dans Supabase Storage)
-          const fileExt = photoFile.name.split('.').pop();
-          const filePath = `players/${Date.now()}_${Math.random().toString(36).slice(2)}.${fileExt}`;
-
-          // Generic upload via DB provider
-          const mime = photoFile.type;
-          const buffer = Buffer.from(await photoFile.arrayBuffer());
-          const publicUrl = await uploadPhoto(buffer, mime, filePath);
-          if (!publicUrl) {
-            console.error('Upload error via generic provider');
-            const reader = new FileReader();
-            photoUrl = await new Promise<string>((resolve) => {
-              reader.onloadend = () => resolve(reader.result as string);
-              reader.readAsDataURL(photoFile as File);
-            });
-          } else {
-            photoUrl = publicUrl;
-          }
-        } catch (error: unknown) {
-          console.error('Erreur upload supabase:', error);
-          // fallback to data URL
-          const reader = new FileReader();
-          photoUrl = await new Promise<string>((resolve) => {
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(photoFile as File);
-          });
-        }
-      }
+      const formData = new FormData();
+      formData.append('name', nom.trim() || prenom.trim());
+      formData.append('prenom', prenom.trim());
+      formData.append('niveau', niveau);
+      if (photoFile) formData.append('photo', photoFile);
 
       const response = await fetch('/api/players', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          // On envoie toujours `name` au serveur pour garder la compatibilité
-          // mais on le remplit automatiquement avec le prénom si vide.
-          name: nom.trim() || prenom.trim(),
-          prenom: prenom.trim(),
-          photo: photoUrl,
-          niveau,
-        }),
+        body: formData,
       });
 
       const result = await response.json();
@@ -141,9 +101,10 @@ export default function CreationJoueur() {
         setNom('');
         setPrenom('');
         setNiveau('médiocre');
+        if (photoPreview) URL.revokeObjectURL(photoPreview);
         setPhotoPreview(null);
         setPhotoFile(null);
-        fetchPlayers(); // Rafraîchir la liste
+        fetchPlayers();
       } else {
         setFeedback(`❌ ${result.error}`);
       }

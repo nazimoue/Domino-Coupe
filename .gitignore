@@ -19,6 +19,7 @@
 
 # production
 /build
+/public/players
 
 # misc
 .DS_Store
@@ -49,3 +50,4 @@ next-env.d.ts
 
 #claude
 /.claude
+.mcp*

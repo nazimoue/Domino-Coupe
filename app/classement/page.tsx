@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 
 type Player = {
   id: number;
@@ -58,10 +58,11 @@ const TOURNAMENT_DAYS = (() => {
 
 export default function Classement() {
   const [filter, setFilter] = useState<'jour' | 'mois'>('jour');
-  const [selectedDay, setSelectedDay] = useState(1); // Jour 1 par défaut
+  const [selectedDay, setSelectedDay] = useState(1);
   const [players, setPlayers] = useState<Player[]>([]);
   const [scores, setScores] = useState<Score[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [playerPhotos, setPlayerPhotos] = useState<Map<number, string>>(new Map());
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null);
   const [rankingType, setRankingType] = useState<'normal' | 'capot'>('normal');
   const [mounted, setMounted] = useState(false);
@@ -69,28 +70,47 @@ export default function Classement() {
 
   // Charger les joueurs et scores au montage
   useEffect(() => {
-    fetchData();
+    fetchInitialData();
   }, []);
 
+  // Re-fetch scores when day or filter changes (skip initial mount)
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    fetchScores();
+  }, [filter, selectedDay]);
 
-  // Charger les données depuis l'API
-  const fetchData = async () => {
+  const fetchInitialData = async () => {
     setIsLoading(true);
     try {
-      // Charger les joueurs
-      const playersRes = await fetch('/api/players');
+      const [playersRes, scoresRes] = await Promise.all([
+        fetch('/api/players?includePhotos=true'),
+        fetch(filter === 'jour' ? `/api/scores?day=${selectedDay}` : '/api/scores'),
+      ]);
       const playersData = await playersRes.json();
-
-      // Charger les scores
-      const scoresRes = await fetch('/api/scores');
       const scoresData = await scoresRes.json();
-
-      if (playersData.success) setPlayers(playersData.data || []);
+      if (playersData.success) {
+        setPlayers(playersData.data || []);
+        const m = new Map<number, string>();
+        (playersData.data || []).forEach((p: Player) => { if (p.photo && typeof p.photo === 'string') m.set(p.id, p.photo); });
+        setPlayerPhotos(m);
+      }
       if (scoresData.success) setScores(scoresData.data || []);
     } catch (error) {
       console.error('Erreur lors du chargement:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchScores = async () => {
+    try {
+      const url = filter === 'jour' ? `/api/scores?day=${selectedDay}` : '/api/scores';
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.success) setScores(data.data || []);
+    } catch (error) {
+      console.error('Erreur chargement scores:', error);
     }
   };
 
@@ -193,48 +213,10 @@ export default function Classement() {
   const top3 = currentList.slice(0, 3);
   const restOfPlayers = currentList.slice(3);
 
-  // Helper function to convert binary photo to data URL
+  // Photo loading no longer needed — all photos are fetched upfront
+
   const getPlayerPhoto = (playerId: number): string | null => {
-    const player = players.find(p => p.id === playerId);
-    if (!player?.photo) return null;
-
-    // Si c'est déjà une string (data URL, base64 pur ou URL publique)
-    if (typeof player.photo === 'string') {
-      // data URL (déjà prêt)
-      if (player.photo.startsWith('data:')) {
-        return player.photo;
-      }
-      // URL publique (http(s) ou chemin relatif) — renvoyer tel quel
-      if (player.photo.startsWith('http://') || player.photo.startsWith('https://') || player.photo.startsWith('/')) {
-        return player.photo;
-      }
-      // Si c'est du base64 pur, préfixer avec JPEG par défaut
-      return `data:image/jpeg;base64,${player.photo}`;
-    }
-
-    // Si c'est un Uint8Array ou tableau d'octets, le convertir en base64 (compatible navigateur)
-    const toBase64 = (u8: Uint8Array) => {
-      let binary = '';
-      const chunkSize = 0x8000; // keep chunk size reasonable for large images
-      for (let i = 0; i < u8.length; i += chunkSize) {
-        const slice = u8.subarray(i, i + chunkSize);
-        binary += String.fromCharCode.apply(null, Array.from(slice));
-      }
-      return btoa(binary);
-    };
-
-    if (player.photo instanceof Uint8Array) {
-      const base64String = toBase64(player.photo);
-      return `data:image/jpeg;base64,${base64String}`;
-    }
-
-    if (Array.isArray(player.photo)) {
-      const uint8Array = new Uint8Array(player.photo as number[]);
-      const base64String = toBase64(uint8Array);
-      return `data:image/jpeg;base64,${base64String}`;
-    }
-
-    return null;
+    return playerPhotos.get(playerId) ?? null;
   };
 
   // Return a small stylized SVG icon for a level
@@ -361,8 +343,6 @@ export default function Classement() {
     );
   }
 
-
-
   return (
     <main className="min-h-screen w-full bg-[#041336] text-[#f8fafc] font-sans selection:bg-sky-500 selection:text-slate-900">
 
@@ -420,7 +400,6 @@ export default function Classement() {
           </div>
 
 
-
           {/* --- SÉLECTEUR DE JOUR (Visible seulement si filtre = 'jour') --- */}
           {filter === 'jour' && (
             <div className="mb-6 overflow-x-auto pb-2 scrollbar-hide">
@@ -454,7 +433,7 @@ export default function Classement() {
           <div className="flex justify-center items-end gap-2 md:gap-4 mb-2 animate-fade-in-up">
 
             {/* 2ème */}
-            <div onClick={() => top3[1] && setSelectedPlayer(top3[1])} className="cursor-pointer flex flex-col items-center w-1/3">
+            <div onClick={() => { if (top3[1]) { setSelectedPlayer(top3[1]); } }} className="cursor-pointer flex flex-col items-center w-1/3">
               <div className="relative w-16 h-16 rounded-full border-2 border-gray-400 shadow-lg bg-[#064e3b] flex items-center justify-center mb-1 overflow-hidden">
                 {top3[1] && getPlayerPhoto(top3[1].id) ? (
                   <Image src={getPlayerPhoto(top3[1].id) as string} alt={top3[1].name} className="w-16 h-16 object-cover rounded-full" width={64} height={64} unoptimized />
@@ -475,7 +454,7 @@ export default function Classement() {
             </div>
 
             {/* 1er */}
-            <div onClick={() => top3[0] && setSelectedPlayer(currentList[0])} className="cursor-pointer flex flex-col items-center w-1/3 -mt-4">
+            <div onClick={() => { if (top3[0]) { setSelectedPlayer(currentList[0]); } }} className="cursor-pointer flex flex-col items-center w-1/3 -mt-4">
               <div className="relative w-24 h-24 rounded-full border-4 border-[#fbbf24] shadow-[0_0_20px_rgba(251,191,36,0.5)] bg-[#064e3b] flex items-center justify-center mb-1 z-10 overflow-hidden">
                 {top3[0] && getPlayerPhoto(top3[0].id) ? (
                   <Image src={getPlayerPhoto(top3[0].id) as string} alt={top3[0].name} className="w-24 h-24 object-cover rounded-full" width={96} height={96} unoptimized />
@@ -496,7 +475,7 @@ export default function Classement() {
             </div>
 
             {/* 3ème */}
-            <div onClick={() => top3[2] && setSelectedPlayer(currentList[2])} className="cursor-pointer flex flex-col items-center w-1/3">
+            <div onClick={() => { if (top3[2]) { setSelectedPlayer(currentList[2]); } }} className="cursor-pointer flex flex-col items-center w-1/3">
               <div className="relative w-16 h-16 rounded-full border-2 border-[#b45309] shadow-lg bg-[#064e3b] flex items-center justify-center mb-1 overflow-hidden">
                 {top3[2] && getPlayerPhoto(top3[2].id) ? (
                   <Image src={getPlayerPhoto(top3[2].id) as string} alt={top3[2].name} className="w-16 h-16 object-cover rounded-full" width={64} height={64} unoptimized />
@@ -565,7 +544,7 @@ export default function Classement() {
 
           <div className="space-y-2">
             {restOfPlayers.map((player) => (
-              <div key={player.id} onClick={() => setSelectedPlayer(player)} className="cursor-pointer flex items-center gap-4 p-3 rounded-xl bg-[#064e3b]/20 border border-[#fbbf24]/5 transition-all hover:shadow-lg">
+              <div key={player.id} onClick={() => { setSelectedPlayer(player); }} className="cursor-pointer flex items-center gap-4 p-3 rounded-xl bg-[#064e3b]/20 border border-[#fbbf24]/5 transition-all hover:shadow-lg">
                 <div className="w-6 text-center font-bold text-emerald-500/50 font-serif text-base">
                   #{player.rank}
                 </div>
@@ -597,3 +576,4 @@ export default function Classement() {
     </main>
   );
 }
+

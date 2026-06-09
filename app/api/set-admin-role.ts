@@ -1,5 +1,4 @@
-import { authGetUser } from '@/lib/db';
-import { setUserRole } from '@/lib/db.server';
+import { authGetUser, setUserRole } from '@/lib/dbFacade.server';
 
 export async function POST(request: Request) {
   // Verify that the caller is authenticated and has admin role
